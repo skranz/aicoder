@@ -1,0 +1,35 @@
+
+
+source_file_to_promt = function(file,
+                         add_line_numbers = FALSE,
+                         begin_tag = "### BEGIN_FILE:",
+                         end_tag   = "### END_FILE") {
+  stopifnot(file.exists(file))
+
+  lines = readLines(file, warn = FALSE, encoding = "UTF-8")
+
+  # Optional (fast) line-number prefix
+  if (isTRUE(add_line_numbers)) {
+    n     = seq_along(lines)
+    width = nchar(length(lines))
+    lines = sprintf(paste0("%", width, "d | %s"), n, lines)
+  }
+
+  # Guess language from extension; fall back to blank
+  ext   = tolower(tools::file_ext(file))
+  langs = c(r = "r", py = "python", js = "javascript", md = "markdown",
+            cpp = "cpp", c = "c", h = "c", java = "java", cs = "csharp",
+            go = "go", rs = "rust", sh = "bash", yml = "yaml", yaml = "yaml")
+  lang  = if (ext %in% names(langs)) langs[[ext]] else ""
+
+  prompt = stri_join(
+    begin_tag, " ", file, "\n",
+    "```", lang, "\n",
+    stri_join(lines, collapse = "\n"), "\n",
+    "```\n",
+    end_tag, "\n",
+    collapse = ""
+  )
+
+  prompt
+}
