@@ -2,13 +2,23 @@ example = function() {
   pkg_dir = "C:/libraries/aicoder/stata2r"
 }
 
+
+aic_tests_finish = function(aic) {
+  restore.point("aic_tests_finish")
+  header =  paste0("In total ", aic_num_test_failed(aic), " of ", aic_num_test(aic), " tests failed.\n\n")
+  aic$test_report = paste0(header, aic_all_test_string(aic))
+  aic_write_utf8(aic, aic$test_report, "test_report.txt")
+  aic
+}
+
 aic_clear_tests = function(aic) {
-  aic$test_num = 0
+  aic$num_tests = 0
+  aic$test_logs =  vector("list",10)
   aic
 }
 
 aic_test_logs = function(aic) {
-  aic$test_logs[seq_len(aic$num_logs)]
+  aic$test_logs[seq_len(aic$num_tests)]
 }
 
 aic_num_test_failed = function(aic) {
@@ -16,12 +26,13 @@ aic_num_test_failed = function(aic) {
 }
 
 aic_num_test = function(aic) {
-  aic$num_logs
+  aic$num_tests
 }
 
 aic_all_test_string = function(aic, merge_lines=TRUE) {
-  if (aic$num_logs==0) return("")
-  str = sapply(seq_len(aic$num_logs), function(i) {
+  restore.point("aic_all_test_string")
+  if (aic$num_tests==0) return("")
+  str = sapply(seq_len(aic$num_tests), function(i) {
     aic_single_test_string(aic, i)
   })
   if (merge_lines) return(paste0(str, collapse="\n\n"))
@@ -53,11 +64,11 @@ aic_show_test = function(aic, test_num=NULL, test_log = aic$test_logs[[test_num]
 aic_add_test = function(aic, test_log=list(ok=ok,test_name=test_name, msg=msg, log=log),ok, test_name, msg="", log=NULL, show_test = aic$show_test,  show_failed_test=aic$show_failed_test) {
   restore.point("aic_add_test")
   aic$last_test_ok = test_log$ok
-  aic$num_logs = aic$num_logs+1
-  if (length(aic$test_logs)<aic$num_logs) {
+  aic$num_tests = aic$num_tests+1
+  if (length(aic$test_logs)<aic$num_tests) {
     aic$test_logs = c(aic$test_logs, vector("list",max(10,length(aic$test_logs))))
   }
-  aic$test_logs[[aic$num_logs]] = test_log
+  aic$test_logs[[aic$num_tests]] = test_log
   if (show_test | (show_failed_test & !test_log$ok)) {
     aic_show_test(aic, test_log=test_log)
   }
@@ -69,6 +80,22 @@ aic_rel_path = function(aic, files) {
   files = normalizePath(files,mustWork = FALSE,winslash = "/")
   rel_paths = stri_replace_first_fixed(files, paste0(repo_dir,"/"),"")
   rel_paths
+}
+
+aic_test_script = function(aic, file, change_wd = TRUE) {
+  if (!file.exists(file)) {
+    cat("\ntest script ", file, "does not exist.")
+    return(aic)
+  }
+  oldwd = getwd()
+  if (change_wd) {
+    dir = dirname(file)
+    setwd(dir)
+  }
+  log = source_and_capture(file)
+  aic = aic_add_test(aic,ok=!log$has_error, test_name=basename(file), msg="", log=log$log)
+  try(setwd(oldwd), silent=TRUE)
+  aic
 }
 
 # Test whether all R files can be sourced

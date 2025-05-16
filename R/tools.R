@@ -41,7 +41,36 @@ sapply_extract = function(li, field, null_val=NULL) {
   })
 }
 
-read_utf8 = function(file) {
+
+aic_write_utf8 = function(aic, x, file_base) {
+  if (is.null(aic$aic_dir)) {
+    cat("\nNot aic_dir specified.")
+    return(NULL)
+  }
+  file = file.path(aic$aic_dir, file_base)
+  write_utf8(x, file)
+}
+
+aic_read_utf8 = function(aic, file_base) {
+  if (is.null(aic$aic_dir)) {
+    cat("\nNot aic_dir specified.")
+    return(NULL)
+  }
+
+  file = file.path(aic$aic_dir, file_base)
+  if (!file.exists(file)) return(NULL)
+  read_utf8(file)
+}
+
+
+write_utf8 = function(x,file) {
+  txt = merge_lines(as.character(x))
+  writeLines(txt, file)
+}
+read_utf8 = function(file, allow_empty=FALSE) {
+  if (allow_empty) {
+    if (!file.exists(file)) return(NULL)
+  }
   txt = readLines(file, encoding="UTF8", warn=FALSE)
   merge_lines(txt)
 }

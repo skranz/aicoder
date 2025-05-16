@@ -1,5 +1,5 @@
-aic_new = function(repo_dir = NULL, is_pkg=file.exists(file.path(repo_dir,"DESCRIPTION")), prompt_config_file=NULL, mod_protected_files = NULL, mod_fixed_dirs = NULL, mod_just_ext = "r", pat_file=NULL, response_file=NULL, show_test=FALSE, show_failed_test=TRUE, temp_dir = NULL, ...) {
-  num_logs = 0
+aic_new = function(repo_dir = NULL, aic_dir = file.path(repo_dir,"aicoder_work"), is_pkg=file.exists(file.path(repo_dir,"DESCRIPTION")), prompt_config_file=NULL, mod_protected_files = NULL, mod_fixed_dirs = NULL, mod_just_ext = "r", pat_file=NULL, response_file=NULL, show_test=FALSE, show_failed_test=TRUE, temp_dir = aic_dir, ...) {
+  num_tests = 0
   test_logs =  vector("list",10)
   aic = copy_into_list()
   restore.point("aic_new")
@@ -16,6 +16,7 @@ aic_new = function(repo_dir = NULL, is_pkg=file.exists(file.path(repo_dir,"DESCR
 
 aic_make_prompt = function(aic, cfg=aic$cfg) {
   aic$prompt = files2prompt::files2prompt(root_dir = aic$repo_dir, open="{{", close="}}", cfg=cfg)
+  aic_write_utf8(aic, aic$prompt, "prompt.txt")
   aic
 }
 

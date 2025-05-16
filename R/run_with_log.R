@@ -1,3 +1,26 @@
+example = function() {
+  file = "C:/libraries/aicoder/stata2r/aicoder_work/tests/do1/test_do1.R"
+  res = source_and_capture(file)
+  res$has_error
+  write_utf8(res$log,"C:/libraries/aicoder/stata2r/aicoder_work/tests/do1/log.txt")
+}
+
+source_and_capture <- function(r_file_path) {
+  # Capture all output, including errors
+  result <- capture.output({
+    # Use try to catch errors but continue execution
+    error_status <- try(source(r_file_path, echo = TRUE), silent = TRUE)
+  }, type = "output")
+
+  # Return TRUE if no error, FALSE if there was an error
+  has_error = inherits(error_status, "try-error")
+  if (has_error) {
+    result = c(result, as.character(error_status))
+  }
+  list(log = merge_lines(result), has_error=has_error)
+}
+
+
 # run_with_log.R
 # Utility to execute R code and capture console‑like output as a string.
 # Relies on the CRAN package "evaluate" for robust capture of source, output,

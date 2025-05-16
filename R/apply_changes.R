@@ -11,7 +11,8 @@ example = function() {
 }
 
 aic_parse_and_commit_changes = function(aic, resp_text = NULL, overwrite=FALSE) {
-  if (is_null(resp_text)) {
+  restore.point("aic_parse_and_commit_changes")
+  if (is.null(resp_text)) {
     resp_text = read_utf8(aic$response_file)
   }
   if (!overwrite) {
@@ -21,7 +22,8 @@ aic_parse_and_commit_changes = function(aic, resp_text = NULL, overwrite=FALSE) 
     }
   }
   aic = aic_parse_response(aic, resp_text)
-  aic = aic_comit_changes(aic)
+  changes = aic$changes
+  aic = aic_commit_changes(aic)
   aic
 }
 
@@ -71,7 +73,7 @@ aic_apply_file_changes = function(aic) {
     if (!is_empty(fixed_dir)) {
       file = file.path(fixed_dir, basename(file))
     }
-    long_file = file.path(base_dir, file)
+    long_file = file.path(aic$repo_dir, file)
     if (changes$type[i]=="change") {
       content = changes$content[i]
       writeLines(content, long_file)
